@@ -28,7 +28,7 @@ const allowedOrigins = [
     'http://127.0.0.1:5500',
     'http://127.0.0.1:8000',
     // Production URLs - Add your deployed frontend URLs here:
-    // 'https://your-site.netlify.app',
+    'https://enigmaugi.netlify.app',
     // 'https://your-site.vercel.app',
     // 'https://your-custom-domain.com',
     // Add from environment variable if set

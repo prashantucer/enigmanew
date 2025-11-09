@@ -551,7 +551,7 @@ function initRegistration() {
         }
         // Production - Update this with your actual backend URL
         // Example: 'https://enigma-backend.onrender.com'
-        return 'https://your-backend.onrender.com'; // ⚠️ UPDATE THIS FOR PRODUCTION
+        return 'https://enigmaugi.onrender.com'; // ⚠️ UPDATE THIS FOR PRODUCTION
     })();
     
     // Razorpay key (placeholder - replace with actual key from backend response)
