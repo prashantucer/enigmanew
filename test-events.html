@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Events</title>
+</head>
+<body>
+    <h1>Event Dropdown Test</h1>
+    <select id="event1">
+        <option value="">Select Event 1</option>
+    </select>
+    <select id="event2">
+        <option value="">Select Event 2</option>
+    </select>
+    
+    <script>
+        const eventData = {
+            'open-mic': { name: 'Open Mic', type: 'Solo (Offline)', category: 'Literary' },
+            'kbc-quiz': { name: 'KBC Quiz', type: 'Team (Offline)', category: 'Literary' },
+            'dramatics': { name: 'Dramatics', type: 'Team (Offline)', category: 'Theatre' },
+            'chess': { name: 'Chess', type: 'Solo (Offline)', category: 'Sports' },
+            'dance': { name: 'Dance', type: 'Team (Offline)', category: 'Dance' },
+            'singing': { name: 'Singing', type: 'Solo (Offline)', category: 'Music' }
+        };
+        
+        const event1Select = document.getElementById('event1');
+        const event2Select = document.getElementById('event2');
+        
+        function populateEvents() {
+            console.log('Populating events...');
+            Object.keys(eventData).forEach(slug => {
+                const event = eventData[slug];
+                const option1 = document.createElement('option');
+                option1.value = slug;
+                option1.textContent = event.name;
+                event1Select.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = slug;
+                option2.textContent = event.name;
+                event2Select.appendChild(option2);
+            });
+            console.log('Events populated!');
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            populateEvents();
+        });
+    </script>
+</body>
+</html>
+

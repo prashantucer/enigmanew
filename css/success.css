@@ -1,0 +1,251 @@
+/* ============================================
+   Success Page Styles
+   ============================================ */
+
+.success-section {
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--spacing-xl) + 80px) var(--spacing-lg) var(--spacing-lg);
+}
+
+.success-container {
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+/* Success Icon */
+.success-icon {
+    margin-bottom: var(--spacing-lg);
+    animation: scaleIn 0.5s ease-out;
+}
+
+.success-icon .checkmark {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    animation: checkmarkDraw 0.8s ease-out 0.3s both;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes checkmarkDraw {
+    from {
+        stroke-dasharray: 0 1000;
+        opacity: 0;
+    }
+    to {
+        stroke-dasharray: 1000 0;
+        opacity: 1;
+    }
+}
+
+/* Success Title */
+.success-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-md);
+    text-shadow: 
+        0 0 10px rgba(0, 255, 255, 0.5),
+        0 0 20px rgba(0, 255, 255, 0.3),
+        0 0 30px rgba(0, 255, 255, 0.2);
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 
+            0 0 10px rgba(0, 255, 255, 0.5),
+            0 0 20px rgba(0, 255, 255, 0.3),
+            0 0 30px rgba(0, 255, 255, 0.2);
+    }
+    to {
+        text-shadow: 
+            0 0 20px rgba(0, 255, 255, 0.8),
+            0 0 30px rgba(0, 255, 255, 0.5),
+            0 0 40px rgba(0, 255, 255, 0.3),
+            0 0 50px rgba(0, 255, 255, 0.2);
+    }
+}
+
+.success-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.6;
+}
+
+/* Details Card */
+.details-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.details-title {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-lg);
+    font-weight: 600;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+}
+
+.detail-value {
+    color: var(--color-text-primary);
+    font-weight: 500;
+    font-size: 1rem;
+    word-break: break-all;
+    text-align: right;
+    flex: 1;
+    margin-left: var(--spacing-md);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.action-buttons .btn {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* Success Info */
+.success-info {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.success-info p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.success-info p:last-child {
+    margin-bottom: 0;
+}
+
+.success-info a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-normal);
+}
+
+.success-info a:hover {
+    color: var(--color-secondary);
+    text-decoration: underline;
+}
+
+/* Download Ticket Button */
+#downloadTicketBtn {
+    position: relative;
+    overflow: hidden;
+}
+
+#downloadTicketBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .success-section {
+        padding: calc(var(--spacing-lg) + 80px) var(--spacing-md) var(--spacing-md);
+    }
+
+    .success-container {
+        padding: var(--spacing-lg);
+    }
+
+    .success-title {
+        font-size: 2rem;
+    }
+
+    .success-icon .checkmark {
+        width: 100px;
+        height: 100px;
+    }
+
+    .details-card {
+        padding: var(--spacing-md);
+    }
+
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+
+    .detail-value {
+        text-align: left;
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .action-buttons .btn {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .success-container {
+        padding: var(--spacing-md);
+    }
+
+    .success-title {
+        font-size: 1.75rem;
+    }
+
+    .success-icon .checkmark {
+        width: 80px;
+        height: 80px;
+    }
+
+    .details-title {
+        font-size: 1.3rem;
+    }
+}
+
+

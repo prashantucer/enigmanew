@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /registrations/{registrationId} {
+      // Read: Only if authenticated user's email matches document email
+      allow read: if request.auth != null && request.auth.token.email == resource.data.email;
+      
+      // Delete: Deny all
+      allow delete: if false;
+      
+      // Create: Only from backend (service account) with payment_status = "paid"
+      allow create: if request.auth == null && request.resource.data.payment_status == 'paid';
+      
+      // Update: Only allow backend to set payment_status = "paid"
+      allow update: if request.auth == null && 
+                      request.resource.data.payment_status == 'paid' &&
+                      resource.data.payment_status != 'paid';
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+

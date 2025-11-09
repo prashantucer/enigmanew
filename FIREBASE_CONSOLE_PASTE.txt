@@ -1,0 +1,35 @@
+// ============================================
+// COPY AND PASTE THIS INTO FIREBASE CONSOLE
+// Firebase Console → Firestore Database → Rules
+// ============================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /registrations/{registrationId} {
+      // READ: Only if authenticated user's email matches document email
+      allow read: if request.auth != null && request.auth.token.email == resource.data.email;
+      
+      // DELETE: Deny all deletes
+      allow delete: if false;
+      
+      // CREATE: Only from backend (service account) with payment_status = "paid"
+      allow create: if request.auth == null && 
+                       request.resource.data.payment_status == 'paid' &&
+                       request.resource.data.keys().hasAll(['name', 'email', 'amount', 'payment_id', 'order_id', 'payment_status', 'createdAt']);
+      
+      // UPDATE: Only allow backend to set payment_status = "paid"
+      allow update: if request.auth == null && 
+                       request.resource.data.payment_status == 'paid' &&
+                       resource.data.payment_status != 'paid' &&
+                       request.resource.data.payment_id == resource.data.payment_id &&
+                       request.resource.data.order_id == resource.data.order_id &&
+                       request.resource.data.email == resource.data.email;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+
