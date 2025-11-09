@@ -542,17 +542,18 @@ function initRegistration() {
         }
     });
     
-    // Backend API URL - Auto-detect based on environment
-    // For production, set this in your deployment environment or update manually
+    // Backend API URL - Production URL
     const API_BASE_URL = (() => {
-        // Check if we're on localhost (development)
+        // Development: Use localhost
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             return 'http://localhost:5000';
         }
-        // Production - Update this with your actual backend URL
-        // Example: 'https://enigma-backend.onrender.com'
-        return 'https://enigmaugi.onrender.com'; // ⚠️ UPDATE THIS FOR PRODUCTION
+        // Production: Use deployed backend URL
+        return 'https://enigmaugi.onrender.com';
     })();
+    
+    // Log API URL for debugging
+    console.log('🔗 Backend API URL:', API_BASE_URL);
     
     // Razorpay key (placeholder - replace with actual key from backend response)
     let razorpayKey = 'rzp_test_RdkBIbYhYwLVr7'; // Will be updated from create-order response
