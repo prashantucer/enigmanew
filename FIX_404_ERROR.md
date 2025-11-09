@@ -74,3 +74,4 @@ http://localhost:8000/registration.html
 
 **Status**: Use VS Code Live Server - it's the easiest solution! 🚀
 
+

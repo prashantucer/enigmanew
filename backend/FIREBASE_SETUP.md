@@ -93,3 +93,4 @@ registrations/
 - Set proper Firestore security rules before going live
 
 
+

@@ -494,7 +494,7 @@
         padding: var(--spacing-md);
         border-radius: var(--radius-md);
     }
-    
+
     .form-row {
         grid-template-columns: 1fr;
         gap: var(--spacing-sm);
@@ -531,7 +531,7 @@
     .registration-container h1 {
         font-size: 1.8rem;
     }
-    
+
     .registration-form {
         padding: var(--spacing-sm);
     }

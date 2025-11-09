@@ -101,3 +101,4 @@ Then open: `http://localhost:8000/registration.html`
 
 **Recommendation**: Use **VS Code Live Server** - it's the easiest! 🚀
 
+

@@ -88,3 +88,4 @@ Server is running on port 8000! ✅
 
 **Just open**: `http://localhost:8000/registration.html` 🚀
 
+
