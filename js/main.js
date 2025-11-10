@@ -91,19 +91,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Lazy load images
+    // Optimized lazy load images with better performance
     if ('IntersectionObserver' in window) {
         const imageObserver = new IntersectionObserver(function(entries, observer) {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const img = entry.target;
                     if (img.dataset.src) {
-                        img.src = img.dataset.src;
-                        img.removeAttribute('data-src');
+                        // Use Image object for better loading control
+                        const newImg = new Image();
+                        newImg.decoding = 'async';
+                        newImg.onload = function() {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            img.classList.add('loaded');
+                        };
+                        newImg.onerror = function() {
+                            img.removeAttribute('data-src');
+                            img.style.display = 'none';
+                        };
+                        newImg.src = img.dataset.src;
                     }
                     observer.unobserve(img);
                 }
             });
+        }, {
+            rootMargin: '50px', // Start loading 50px before visible
+            threshold: 0.01
         });
         
         document.querySelectorAll('img[data-src]').forEach(img => {

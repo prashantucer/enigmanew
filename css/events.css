@@ -81,6 +81,8 @@
     overflow: hidden;
     position: relative;
     background-color: var(--color-surface);
+    will-change: contents;
+    contain: layout style paint;
 }
 
 /* Category-specific background textures */
@@ -180,7 +182,7 @@
     background-size: 20px 20px, 20px 20px, 100% 100%, 100% 100%;
 }
 
-/* Loading placeholder */
+/* Enhanced loading placeholder with skeleton */
 .event-image::before {
     content: '';
     position: absolute;
@@ -189,29 +191,42 @@
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg, 
-        rgba(17, 17, 17, 0.6) 0%, 
-        rgba(17, 17, 17, 0.4) 50%, 
-        rgba(17, 17, 17, 0.6) 100%);
+        rgba(17, 17, 17, 0.7) 0%, 
+        rgba(17, 17, 17, 0.5) 50%, 
+        rgba(17, 17, 17, 0.7) 100%);
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    animation: shimmer 1.2s ease-in-out infinite;
     z-index: 1;
     opacity: 1;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    visibility: visible;
+}
+
+/* Loading state - more visible shimmer */
+.event-image.image-loading::before {
+    opacity: 1;
+    animation: shimmer 1s ease-in-out infinite;
 }
 
 /* Hide shimmer when image is loaded */
 .event-image:has(img.loaded)::before,
 .event-image:has(img[src]:not([src=""]))::before {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    display: none;
 }
 
 /* Fallback for browsers that don't support :has() - use JavaScript class */
 .event-image.image-loaded::before {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    display: none;
+}
+
+/* Error state */
+.event-image.image-error::before {
+    opacity: 0.3;
+    animation: none;
 }
 
 .event-image img.loaded {
@@ -253,15 +268,32 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform var(--transition-normal), opacity 0.3s ease;
+    transition: transform var(--transition-normal), opacity 0.4s ease;
     position: relative;
     z-index: 2;
     opacity: 0;
+    will-change: opacity, transform;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    backface-visibility: hidden;
+    transform: translateZ(0); /* GPU acceleration */
 }
 
 .event-image img.loaded,
 .event-image img[src]:not([src=""]) {
     opacity: 1;
+    animation: fadeInImage 0.4s ease-out;
+}
+
+@keyframes fadeInImage {
+    from {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .event-card:hover .event-image img {

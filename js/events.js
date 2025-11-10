@@ -51,10 +51,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Lazy loading for event images
+    // Advanced lazy loading for event images with priority loading
     const eventImages = document.querySelectorAll('.event-image img[data-src]');
     
-    if ('IntersectionObserver' in window && eventImages.length > 0) {
+    // Preload first 3 visible images immediately (above the fold)
+    const preloadCount = Math.min(3, eventImages.length);
+    for (let i = 0; i < preloadCount; i++) {
+        const img = eventImages[i];
+        const dataSrc = img.getAttribute('data-src');
+        if (dataSrc) {
+            const newImg = new Image();
+            newImg.onload = function() {
+                img.src = dataSrc;
+                img.removeAttribute('data-src');
+                img.classList.add('loaded');
+                img.closest('.event-image')?.classList.add('image-loaded');
+            };
+            newImg.onerror = function() {
+                img.removeAttribute('data-src');
+                img.style.display = 'none';
+            };
+            newImg.src = dataSrc;
+        }
+    }
+    
+    // Lazy load remaining images with IntersectionObserver
+    if ('IntersectionObserver' in window && eventImages.length > preloadCount) {
         const imageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -62,36 +84,61 @@ document.addEventListener('DOMContentLoaded', function() {
                     const dataSrc = img.getAttribute('data-src');
                     
                     if (dataSrc) {
-                        // Create new image to preload
+                        // Create new image to preload with decoding
                         const newImg = new Image();
+                        newImg.decoding = 'async';
+                        
                         newImg.onload = function() {
+                            // Smooth fade-in transition
                             img.src = dataSrc;
                             img.removeAttribute('data-src');
                             img.classList.add('loaded');
-                            // Add class to parent for CSS fallback
                             img.closest('.event-image')?.classList.add('image-loaded');
+                            
+                            // Remove loading state
+                            const eventImage = img.closest('.event-image');
+                            if (eventImage) {
+                                eventImage.classList.remove('image-loading');
+                            }
                         };
+                        
                         newImg.onerror = function() {
-                            // If image fails to load, keep the texture background
                             img.removeAttribute('data-src');
                             img.style.display = 'none';
+                            const eventImage = img.closest('.event-image');
+                            if (eventImage) {
+                                eventImage.classList.remove('image-loading');
+                                eventImage.classList.add('image-error');
+                            }
                         };
-                        newImg.src = dataSrc;
                         
+                        // Mark as loading
+                        const eventImage = img.closest('.event-image');
+                        if (eventImage) {
+                            eventImage.classList.add('image-loading');
+                        }
+                        
+                        newImg.src = dataSrc;
                         observer.unobserve(img);
                     }
                 }
             });
         }, {
-            rootMargin: '50px' // Start loading 50px before image is visible
+            rootMargin: '100px', // Start loading 100px before image is visible (increased for smoother experience)
+            threshold: 0.01 // Trigger when 1% of image is visible
         });
         
-        eventImages.forEach(img => {
-            imageObserver.observe(img);
-        });
+        // Observe remaining images (skip first 3)
+        for (let i = preloadCount; i < eventImages.length; i++) {
+            const img = eventImages[i];
+            if (img.hasAttribute('data-src')) {
+                imageObserver.observe(img);
+            }
+        }
     } else {
-        // Fallback: Load all images immediately if IntersectionObserver is not supported
-        eventImages.forEach(img => {
+        // Fallback: Load all remaining images immediately
+        for (let i = preloadCount; i < eventImages.length; i++) {
+            const img = eventImages[i];
             const dataSrc = img.getAttribute('data-src');
             if (dataSrc) {
                 img.src = dataSrc;
@@ -99,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 img.classList.add('loaded');
                 img.closest('.event-image')?.classList.add('image-loaded');
             }
-        });
+        }
     }
 });
 

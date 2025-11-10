@@ -50,11 +50,12 @@ ENIGMA/
 ├── gallery.js              # Gallery image/video loading
 ├── animations.js           # Scroll animations, parallax
 ├── main.js                 # Custom cursor, video handling
-└── assests/
+└── assets/
     ├── logo/               # ENIGMA logo
-    ├── enigma xii/         # Gallery images and videos
-    ├── sponseer/           # Sponsor logos
-    └── video/              # Hero section video
+    ├── enigma xii/          # Gallery images and videos
+    ├── sponseer/            # Sponsor logos
+    ├── qr/                  # Payment QR code
+    └── video/               # Hero section video
 ```
 
 ## 🚀 Getting Started
