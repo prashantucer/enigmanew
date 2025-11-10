@@ -44,6 +44,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (category === 'all' || card.dataset.category === category) {
                 card.classList.add('visible');
                 card.style.display = 'block';
+                // Load images for visible cards
+                const img = card.querySelector('img[data-src]');
+                if (img && img.hasAttribute('data-src')) {
+                    const dataSrc = img.getAttribute('data-src');
+                    if (dataSrc && !img.src) {
+                        const newImg = new Image();
+                        newImg.onload = function() {
+                            img.src = dataSrc;
+                            img.removeAttribute('data-src');
+                            img.classList.add('loaded');
+                            img.closest('.event-image')?.classList.add('image-loaded');
+                        };
+                        newImg.onerror = function() {
+                            img.removeAttribute('data-src');
+                            img.style.display = 'none';
+                        };
+                        newImg.src = dataSrc;
+                    }
+                }
             } else {
                 card.classList.remove('visible');
                 card.style.display = 'none';
@@ -51,27 +70,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Function to load an image
+    function loadEventImage(img) {
+        if (!img || !img.hasAttribute('data-src')) return;
+        
+        const dataSrc = img.getAttribute('data-src');
+        if (!dataSrc || img.src) return; // Already loaded
+        
+        const newImg = new Image();
+        newImg.decoding = 'async';
+        
+        newImg.onload = function() {
+            img.src = dataSrc;
+            img.removeAttribute('data-src');
+            img.classList.add('loaded');
+            img.closest('.event-image')?.classList.add('image-loaded');
+            
+            // Remove loading state
+            const eventImage = img.closest('.event-image');
+            if (eventImage) {
+                eventImage.classList.remove('image-loading');
+            }
+        };
+        
+        newImg.onerror = function() {
+            console.warn('Failed to load image:', dataSrc);
+            img.removeAttribute('data-src');
+            img.style.display = 'none';
+            const eventImage = img.closest('.event-image');
+            if (eventImage) {
+                eventImage.classList.remove('image-loading');
+                eventImage.classList.add('image-error');
+            }
+        };
+        
+        // Mark as loading
+        const eventImage = img.closest('.event-image');
+        if (eventImage) {
+            eventImage.classList.add('image-loading');
+        }
+        
+        newImg.src = dataSrc;
+    }
+    
     // Advanced lazy loading for event images with priority loading
     const eventImages = document.querySelectorAll('.event-image img[data-src]');
     
-    // Preload first 3 visible images immediately (above the fold)
-    const preloadCount = Math.min(3, eventImages.length);
+    // Preload first 6 visible images immediately (above the fold)
+    const preloadCount = Math.min(6, eventImages.length);
     for (let i = 0; i < preloadCount; i++) {
         const img = eventImages[i];
-        const dataSrc = img.getAttribute('data-src');
-        if (dataSrc) {
-            const newImg = new Image();
-            newImg.onload = function() {
-                img.src = dataSrc;
-                img.removeAttribute('data-src');
-                img.classList.add('loaded');
-                img.closest('.event-image')?.classList.add('image-loaded');
-            };
-            newImg.onerror = function() {
-                img.removeAttribute('data-src');
-                img.style.display = 'none';
-            };
-            newImg.src = dataSrc;
+        if (img && img.hasAttribute('data-src')) {
+            loadEventImage(img);
         }
     }
     
@@ -81,57 +131,21 @@ document.addEventListener('DOMContentLoaded', function() {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const img = entry.target;
-                    const dataSrc = img.getAttribute('data-src');
-                    
-                    if (dataSrc) {
-                        // Create new image to preload with decoding
-                        const newImg = new Image();
-                        newImg.decoding = 'async';
-                        
-                        newImg.onload = function() {
-                            // Smooth fade-in transition
-                            img.src = dataSrc;
-                            img.removeAttribute('data-src');
-                            img.classList.add('loaded');
-                            img.closest('.event-image')?.classList.add('image-loaded');
-                            
-                            // Remove loading state
-                            const eventImage = img.closest('.event-image');
-                            if (eventImage) {
-                                eventImage.classList.remove('image-loading');
-                            }
-                        };
-                        
-                        newImg.onerror = function() {
-                            img.removeAttribute('data-src');
-                            img.style.display = 'none';
-                            const eventImage = img.closest('.event-image');
-                            if (eventImage) {
-                                eventImage.classList.remove('image-loading');
-                                eventImage.classList.add('image-error');
-                            }
-                        };
-                        
-                        // Mark as loading
-                        const eventImage = img.closest('.event-image');
-                        if (eventImage) {
-                            eventImage.classList.add('image-loading');
-                        }
-                        
-                        newImg.src = dataSrc;
+                    if (img && img.hasAttribute('data-src')) {
+                        loadEventImage(img);
                         observer.unobserve(img);
                     }
                 }
             });
         }, {
-            rootMargin: '100px', // Start loading 100px before image is visible (increased for smoother experience)
+            rootMargin: '50px', // Start loading 50px before image is visible
             threshold: 0.01 // Trigger when 1% of image is visible
         });
         
-        // Observe remaining images (skip first 3)
+        // Observe remaining images (skip first 6)
         for (let i = preloadCount; i < eventImages.length; i++) {
             const img = eventImages[i];
-            if (img.hasAttribute('data-src')) {
+            if (img && img.hasAttribute('data-src')) {
                 imageObserver.observe(img);
             }
         }
@@ -139,16 +153,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fallback: Load all remaining images immediately
         for (let i = preloadCount; i < eventImages.length; i++) {
             const img = eventImages[i];
-            const dataSrc = img.getAttribute('data-src');
-            if (dataSrc) {
-                img.src = dataSrc;
-                img.removeAttribute('data-src');
-                img.classList.add('loaded');
-                img.closest('.event-image')?.classList.add('image-loaded');
+            if (img && img.hasAttribute('data-src')) {
+                loadEventImage(img);
             }
         }
     }
+    
+    // Also load images when they become visible after initial load
+    setTimeout(() => {
+        const allEventImages = document.querySelectorAll('.event-image img[data-src]');
+        allEventImages.forEach(img => {
+            if (img && img.hasAttribute('data-src')) {
+                const card = img.closest('.event-card');
+                if (card && card.style.display !== 'none' && card.classList.contains('visible')) {
+                    loadEventImage(img);
+                }
+            }
+        });
+    }, 100);
 });
+
 
 
 

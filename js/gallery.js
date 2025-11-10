@@ -40,18 +40,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // Create loading placeholder
+    // Create simple loading placeholder
     function createPlaceholder() {
         const placeholder = document.createElement('div');
-        placeholder.className = 'gallery-item gallery-placeholder';
-        placeholder.innerHTML = '<div class="loading-spinner"></div>';
+        placeholder.className = 'gallery-placeholder';
         return placeholder;
     }
     
     // Create gallery item with lazy loading
     function createGalleryItem(item, index) {
         const galleryItem = document.createElement('div');
-        galleryItem.className = 'gallery-item hover-color-overlay';
+        galleryItem.className = 'gallery-item';
         galleryItem.setAttribute('data-index', index);
         
         if (item.type === 'video') {
@@ -94,9 +93,13 @@ document.addEventListener('DOMContentLoaded', function() {
             img.onload = function() {
                 const placeholder = galleryItem.querySelector('.gallery-placeholder');
                 if (placeholder) {
-                    placeholder.style.display = 'none';
+                    placeholder.style.opacity = '0';
+                    setTimeout(() => {
+                        placeholder.style.display = 'none';
+                    }, 200);
                 }
                 this.style.display = 'block';
+                this.classList.add('loaded');
                 galleryItem.classList.add('loaded');
             };
             galleryItem.appendChild(img);
@@ -111,7 +114,44 @@ document.addEventListener('DOMContentLoaded', function() {
         galleryGrid.appendChild(galleryItem);
     });
     
-    // Intersection Observer for lazy loading
+    // Preload first 6 visible images immediately
+    const allGalleryItems = galleryGrid.querySelectorAll('.gallery-item');
+    const preloadCount = Math.min(6, allGalleryItems.length);
+    
+    for (let i = 0; i < preloadCount; i++) {
+        const galleryItem = allGalleryItems[i];
+        const img = galleryItem.querySelector('img[data-src]');
+        if (img) {
+            const dataSrc = img.getAttribute('data-src');
+            if (dataSrc) {
+                const newImg = new Image();
+                newImg.onload = function() {
+                    img.src = dataSrc;
+                    img.removeAttribute('data-src');
+                    img.classList.add('loaded');
+                    const placeholder = galleryItem.querySelector('.gallery-placeholder');
+                    if (placeholder) {
+                        placeholder.style.opacity = '0';
+                        setTimeout(() => {
+                            placeholder.style.display = 'none';
+                        }, 200);
+                    }
+                    galleryItem.classList.add('loaded');
+                };
+                newImg.onerror = function() {
+                    img.removeAttribute('data-src');
+                    img.style.display = 'none';
+                    const placeholder = galleryItem.querySelector('.gallery-placeholder');
+                    if (placeholder) {
+                        placeholder.innerHTML = '<div class="error-message">Failed to load</div>';
+                    }
+                };
+                newImg.src = dataSrc;
+            }
+        }
+    }
+    
+    // Intersection Observer for lazy loading remaining items
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -121,8 +161,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (img) {
                     // Load image
-                    img.src = img.getAttribute('data-src');
-                    img.removeAttribute('data-src');
+                    const dataSrc = img.getAttribute('data-src');
+                    if (dataSrc) {
+                        const newImg = new Image();
+                        newImg.onload = function() {
+                            img.src = dataSrc;
+                            img.removeAttribute('data-src');
+                            img.classList.add('loaded');
+                            const placeholder = galleryItem.querySelector('.gallery-placeholder');
+                            if (placeholder) {
+                                placeholder.style.opacity = '0';
+                                setTimeout(() => {
+                                    placeholder.style.display = 'none';
+                                }, 200);
+                            }
+                            galleryItem.classList.add('loaded');
+                        };
+                        newImg.onerror = function() {
+                            img.removeAttribute('data-src');
+                            img.style.display = 'none';
+                            const placeholder = galleryItem.querySelector('.gallery-placeholder');
+                            if (placeholder) {
+                                placeholder.innerHTML = '<div class="error-message">Failed to load</div>';
+                            }
+                        };
+                        newImg.src = dataSrc;
+                    }
                     observer.unobserve(galleryItem);
                 } else if (video) {
                     // Load video
@@ -130,23 +194,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     video.removeAttribute('data-src');
                     const placeholder = galleryItem.querySelector('.gallery-placeholder');
                     if (placeholder) {
-                        placeholder.style.display = 'none';
+                        placeholder.style.opacity = '0';
+                        setTimeout(() => {
+                            placeholder.style.display = 'none';
+                        }, 200);
                     }
                     video.style.display = 'block';
+                    video.classList.add('loaded');
                     galleryItem.classList.add('loaded');
                     observer.unobserve(galleryItem);
                 }
             }
         });
     }, {
-        rootMargin: '50px' // Start loading 50px before item is visible
+        rootMargin: '50px', // Start loading 50px before item is visible
+        threshold: 0.01
     });
     
-    // Observe all gallery items
-    const allGalleryItems = galleryGrid.querySelectorAll('.gallery-item');
-    allGalleryItems.forEach(item => {
-        imageObserver.observe(item);
-    });
+    // Observe remaining gallery items (skip first 6)
+    for (let i = preloadCount; i < allGalleryItems.length; i++) {
+        const galleryItem = allGalleryItems[i];
+        const img = galleryItem.querySelector('img[data-src]');
+        const video = galleryItem.querySelector('video[data-src]');
+        if (img || video) {
+            imageObserver.observe(galleryItem);
+        }
+    }
     
     // Video play on hover (only for loaded videos)
     galleryGrid.addEventListener('mouseenter', function(e) {
