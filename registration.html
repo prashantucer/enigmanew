@@ -116,6 +116,15 @@
                                     <span class="error-message" id="aadhaarNoError"></span>
                                 </div>
                             </div>
+                            
+                            <!-- Custom College Field (shown when "Other" is selected) -->
+                            <div class="form-row" id="customCollegeRow" style="display: none;">
+                                <div class="form-group">
+                                    <label for="customCollege">College Name <span class="required">*</span></label>
+                                    <input type="text" id="customCollege" name="customCollege" placeholder="Enter your college name">
+                                    <span class="error-message" id="customCollegeError"></span>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Course, Branch, Year Section -->
@@ -172,7 +181,7 @@
                         <!-- Event Selection Section -->
                         <div class="form-section">
                             <h2 class="form-section-title">Event Selection</h2>
-                            <p class="form-section-subtitle">Registration fee: ₹300 for two events</p>
+                            <p class="form-section-subtitle">Registration fee: ₹300 for two events (Both events are required)</p>
                             
                             <div class="form-row">
                                 <div class="form-group">
@@ -185,41 +194,12 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="event2">Event 2</label>
-                                    <select id="event2" name="event2">
+                                    <label for="event2">Event 2 <span class="required">*</span></label>
+                                    <select id="event2" name="event2" required>
                                         <option value="">Select Event 2</option>
                                         <!-- Events will be populated by JavaScript -->
                                     </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ID Card Upload Section -->
-                        <div class="form-section">
-                            <h2 class="form-section-title">ID Card Upload</h2>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="idCard">ID Card Upload <span class="optional">(Optional)</span></label>
-                                    <div class="file-upload-wrapper">
-                                        <input type="file" id="idCard" name="idCard" accept="image/jpeg,image/jpg,image/png">
-                                        <label for="idCard" class="file-upload-label">
-                                            <span class="file-icon">📄</span>
-                                            <span class="file-text">Select File</span>
-                                        </label>
-                                        <span class="file-name" id="fileName">No file chosen</span>
-                                    </div>
-                                    <span class="error-message" id="idCardError"></span>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Upload File Rules !!!</label>
-                                    <div class="upload-rules">
-                                        <ul>
-                                            <li>File Max Size 1 MB.</li>
-                                            <li>Allowed file types: JPG, JPEG, PNG</li>
-                                        </ul>
-                                    </div>
+                                    <span class="error-message" id="event2Error"></span>
                                 </div>
                             </div>
                         </div>

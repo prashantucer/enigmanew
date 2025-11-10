@@ -207,7 +207,18 @@ app.post('/verify-payment', async (req, res) => {
             name,
             email,
             amount,
-            idUrl,
+            // All form fields
+            studIdNo,
+            groupName,
+            college,
+            customCollege,
+            aadhaarNo,
+            course,
+            branch,
+            year,
+            contactNumber,
+            event1,
+            event2,
             // Additional registration fields (optional)
             ...registrationData
         } = req.body;
@@ -238,11 +249,22 @@ app.post('/verify-payment', async (req, res) => {
                         name: name || 'N/A',
                         email: email || 'N/A',
                         amount: amount || 0,
-                        idUrl: idUrl || '',
                         payment_id: razorpay_payment_id,
                         order_id: razorpay_order_id,
                         payment_status: 'paid',
                         createdAt: new Date(),
+                        // All form fields
+                        studIdNo: studIdNo || '',
+                        groupName: groupName || '',
+                        college: college || '',
+                        customCollege: customCollege || '',
+                        aadhaarNo: aadhaarNo || '',
+                        course: course || '',
+                        branch: branch || '',
+                        year: year || '',
+                        contactNumber: contactNumber || '',
+                        event1: event1 || '',
+                        event2: event2 || '',
                         // Include any additional registration data
                         ...registrationData
                     };
