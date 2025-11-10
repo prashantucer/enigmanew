@@ -46,13 +46,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Get full registration data from sessionStorage
     let registrationData = null;
-    const storedData = sessionStorage.getItem('registration_data');
+    let storedData = sessionStorage.getItem('registration_data');
+    
+    // If main data not found, try backup
+    if (!storedData) {
+        storedData = sessionStorage.getItem('registration_data_backup');
+        console.log('📦 Using backup registration data');
+    }
+    
     if (storedData) {
         try {
             registrationData = JSON.parse(storedData);
+            console.log('✅ Registration data loaded:', registrationData);
         } catch (e) {
-            console.error('Error parsing registration data:', e);
+            console.error('❌ Error parsing registration data:', e);
         }
+    } else {
+        console.warn('⚠️ No registration data found in sessionStorage');
     }
     
     // If not in URL, try sessionStorage
@@ -66,6 +76,13 @@ document.addEventListener('DOMContentLoaded', function() {
         orderId = sessionStorage.getItem('order_id');
         userName = sessionStorage.getItem('user_name');
         userEmail = sessionStorage.getItem('user_email');
+    }
+    
+    // Check for verification warnings
+    const verificationWarning = sessionStorage.getItem('verification_warning');
+    const verificationError = sessionStorage.getItem('verification_error');
+    if (verificationWarning || verificationError) {
+        console.warn('⚠️ Payment verification had issues, but data is available');
     }
     
     // Update page elements

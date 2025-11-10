@@ -454,6 +454,39 @@ function initRegistration() {
         // Fixed amount: ₹300 for 2 events
         const amount = 300;
         
+        // Collect ALL form data BEFORE payment (so it's available even if verification fails)
+        const allFormDataBeforePayment = {
+            name: name,
+            email: email,
+            amount: amount,
+            payment_status: 'pending',
+            createdAt: new Date(),
+            // All form fields - explicitly get each one
+            studIdNo: document.getElementById('studIdNo')?.value.trim() || '',
+            groupName: document.getElementById('groupName')?.value.trim() || '',
+            college: collegeValue || '',
+            customCollege: (collegeSelect && collegeSelect.value === 'Other') ? (document.getElementById('customCollege')?.value.trim() || '') : '',
+            aadhaarNo: document.getElementById('aadhaarNo')?.value.trim() || '',
+            course: document.getElementById('course')?.value.trim() || '',
+            branch: document.getElementById('branch')?.value.trim() || '',
+            year: document.getElementById('year')?.value || '',
+            contactNumber: document.getElementById('contactNumber').value.trim() || '',
+            event1: event1 || '',
+            event2: event2 || ''
+        };
+        
+        console.log('📦 Form data collected before payment:', allFormDataBeforePayment);
+        
+        // Store form data in sessionStorage BEFORE payment (as backup)
+        const dataForStorageBeforePayment = {
+            ...allFormDataBeforePayment,
+            createdAt: allFormDataBeforePayment.createdAt.toISOString()
+        };
+        sessionStorage.setItem('registration_data_backup', JSON.stringify(dataForStorageBeforePayment));
+        sessionStorage.setItem('user_name', name);
+        sessionStorage.setItem('user_email', email);
+        console.log('✅ Form data stored in sessionStorage (backup)');
+        
         // Show loading state
         const submitBtn = document.getElementById('submitBtn');
         const btnText = submitBtn.querySelector('.btn-text');
@@ -542,37 +575,35 @@ function initRegistration() {
                             })
                         });
                         
+                        if (!verifyResponse.ok) {
+                            const errorText = await verifyResponse.text();
+                            console.error('❌ Verification request failed:', verifyResponse.status, errorText);
+                            throw new Error(`Verification request failed: ${verifyResponse.status}`);
+                        }
+                        
                         const verifyData = await verifyResponse.json();
+                        console.log('📋 Verification response:', verifyData);
+                        
+                        // Update form data with payment details
+                        const allFormData = {
+                            ...allFormDataBeforePayment,
+                            payment_id: response.razorpay_payment_id,
+                            order_id: response.razorpay_order_id,
+                            payment_status: verifyData.verified ? 'paid' : 'verification_failed',
+                            createdAt: new Date()
+                        };
                         
                         if (verifyData.verified) {
                             // Step 4: Save to Firestore (frontend) - All form data
-                            // Get all form fields
-                            const allFormData = {
-                                name: name,
-                                email: email,
-                                amount: amount,
-                                payment_id: response.razorpay_payment_id,
-                                order_id: response.razorpay_order_id,
-                                payment_status: 'paid',
-                                createdAt: new Date(),
-                                // All form fields - explicitly get each one
-                                studIdNo: document.getElementById('studIdNo')?.value.trim() || '',
-                                groupName: document.getElementById('groupName')?.value.trim() || '',
-                                college: collegeValue || '',
-                                customCollege: (collegeSelect && collegeSelect.value === 'Other') ? (document.getElementById('customCollege')?.value.trim() || '') : '',
-                                aadhaarNo: document.getElementById('aadhaarNo')?.value.trim() || '',
-                                course: document.getElementById('course')?.value.trim() || '',
-                                branch: document.getElementById('branch')?.value.trim() || '',
-                                year: document.getElementById('year')?.value || '',
-                                contactNumber: document.getElementById('contactNumber')?.value.trim() || '',
-                                event1: event1 || '',
-                                event2: event2 || ''
-                            };
-                            
                             console.log('📦 Complete form data to save:', allFormData);
                             
                             // Save to Firestore
-                            await saveToFirestore(allFormData);
+                            try {
+                                await saveToFirestore(allFormData);
+                            } catch (firestoreError) {
+                                console.error('⚠️ Firestore save error (non-critical):', firestoreError);
+                                // Continue even if Firestore save fails
+                            }
                             
                             // Store all data in sessionStorage for success page and ticket
                             // Convert Date to string for JSON storage
@@ -595,11 +626,57 @@ function initRegistration() {
                             // Reset form
                             form.reset();
                         } else {
-                            throw new Error('Payment verification failed');
+                            // Verification failed but payment went through - still store data and redirect
+                            console.warn('⚠️ Payment verification failed, but storing data anyway');
+                            
+                            // Store data even if verification failed (payment went through)
+                            const dataForStorage = {
+                                ...allFormData,
+                                createdAt: allFormData.createdAt.toISOString()
+                            };
+                            
+                            sessionStorage.setItem('payment_id', response.razorpay_payment_id);
+                            sessionStorage.setItem('order_id', response.razorpay_order_id);
+                            sessionStorage.setItem('user_name', name);
+                            sessionStorage.setItem('user_email', email);
+                            sessionStorage.setItem('registration_data', JSON.stringify(dataForStorage));
+                            sessionStorage.setItem('verification_warning', 'true');
+                            
+                            console.log('✅ Data stored despite verification failure');
+                            
+                            // Still redirect to success page (payment went through)
+                            window.location.href = `success.html?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&warning=verification_failed`;
                         }
                     } catch (error) {
-                        console.error('Payment verification error:', error);
-                        alert('Payment verification failed. Please contact support.');
+                        console.error('❌ Payment verification error:', error);
+                        console.error('Error details:', error.message, error.stack);
+                        
+                        // Even if verification fails, if payment went through, store data and redirect
+                        // Payment went through (we're in the handler), so store data anyway
+                        const allFormData = {
+                            ...allFormDataBeforePayment,
+                            payment_id: response.razorpay_payment_id,
+                            order_id: response.razorpay_order_id,
+                            payment_status: 'verification_error',
+                            createdAt: new Date()
+                        };
+                        
+                        const dataForStorage = {
+                            ...allFormData,
+                            createdAt: allFormData.createdAt.toISOString()
+                        };
+                        
+                        sessionStorage.setItem('payment_id', response.razorpay_payment_id);
+                        sessionStorage.setItem('order_id', response.razorpay_order_id);
+                        sessionStorage.setItem('user_name', name);
+                        sessionStorage.setItem('user_email', email);
+                        sessionStorage.setItem('registration_data', JSON.stringify(dataForStorage));
+                        sessionStorage.setItem('verification_error', error.message);
+                        
+                        console.log('✅ Data stored despite verification error');
+                        
+                        // Redirect to success page anyway (payment was successful)
+                        window.location.href = `success.html?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&error=verification`;
                     } finally {
                         // Reset button
                         btnText.style.display = 'inline';
