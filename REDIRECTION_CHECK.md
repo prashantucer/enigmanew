@@ -177,3 +177,4 @@ FRONTEND_URL=https://your-site.netlify.app
 **Last Updated**: All redirections verified! 🎉
 
 
+
