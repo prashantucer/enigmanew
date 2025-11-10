@@ -283,52 +283,105 @@ function initRegistration() {
     });
     
     // Handle custom college field visibility
-    const collegeSelect = document.getElementById('college');
-    const customCollegeRow = document.getElementById('customCollegeRow');
-    const customCollegeInput = document.getElementById('customCollege');
-    const customCollegeError = document.getElementById('customCollegeError');
-    
-    if (collegeSelect && customCollegeRow && customCollegeInput) {
-        // Check initial state (in case page loads with "Other" selected)
-        if (collegeSelect.value === 'Other') {
-            customCollegeRow.style.display = 'grid';
-            customCollegeInput.setAttribute('required', 'required');
+    function setupCustomCollegeField() {
+        const collegeSelect = document.getElementById('college');
+        const customCollegeRow = document.getElementById('customCollegeRow');
+        const customCollegeInput = document.getElementById('customCollege');
+        const customCollegeError = document.getElementById('customCollegeError');
+        
+        console.log('🔍 Setting up custom college field...');
+        console.log('College select:', collegeSelect);
+        console.log('Custom college row:', customCollegeRow);
+        console.log('Custom college input:', customCollegeInput);
+        
+        if (!collegeSelect) {
+            console.error('❌ College select element not found!');
+            return;
         }
         
+        if (!customCollegeRow) {
+            console.error('❌ Custom college row element not found!');
+            return;
+        }
+        
+        if (!customCollegeInput) {
+            console.error('❌ Custom college input element not found!');
+            return;
+        }
+        
+        // Function to show custom college field
+        function showCustomCollegeField() {
+            console.log('✅ Showing custom college field');
+            // Force show with multiple methods - use !important via setProperty
+            customCollegeRow.style.setProperty('display', 'grid', 'important');
+            customCollegeRow.style.setProperty('visibility', 'visible', 'important');
+            customCollegeRow.style.setProperty('opacity', '1', 'important');
+            customCollegeRow.removeAttribute('hidden');
+            customCollegeRow.classList.remove('hidden');
+            customCollegeInput.setAttribute('required', 'required');
+            // Auto focus after a small delay
+            setTimeout(() => {
+                customCollegeInput.focus();
+            }, 150);
+            // Clear error when showing
+            if (customCollegeError) {
+                customCollegeError.classList.remove('show');
+            }
+        }
+        
+        // Function to hide custom college field
+        function hideCustomCollegeField() {
+            console.log('✅ Hiding custom college field');
+            // Force hide with multiple methods - use !important via setProperty
+            customCollegeRow.style.setProperty('display', 'none', 'important');
+            customCollegeRow.style.setProperty('visibility', 'hidden', 'important');
+            customCollegeRow.style.setProperty('opacity', '0', 'important');
+            customCollegeInput.removeAttribute('required');
+            customCollegeInput.value = '';
+            // Clear error when hiding
+            if (customCollegeError) {
+                customCollegeError.classList.remove('show');
+            }
+        }
+        
+        // Check initial state
+        if (collegeSelect.value === 'Other') {
+            showCustomCollegeField();
+        } else {
+            hideCustomCollegeField();
+        }
+        
+        // Add change event listener
         collegeSelect.addEventListener('change', function() {
+            console.log('🔄 College changed to:', this.value);
             if (this.value === 'Other') {
-                // Show custom college field
-                customCollegeRow.style.display = 'grid';
-                customCollegeInput.setAttribute('required', 'required');
-                // Auto focus after a small delay for smooth UX
-                setTimeout(() => {
-                    customCollegeInput.focus();
-                }, 100);
-                // Clear error when showing
-                if (customCollegeError) {
-                    customCollegeError.classList.remove('show');
-                }
-                console.log('✅ Custom college field shown');
+                showCustomCollegeField();
             } else {
-                // Hide custom college field
-                customCollegeRow.style.display = 'none';
-                customCollegeInput.removeAttribute('required');
-                customCollegeInput.value = '';
-                // Clear error when hiding
-                if (customCollegeError) {
-                    customCollegeError.classList.remove('show');
-                }
-                console.log('✅ Custom college field hidden');
+                hideCustomCollegeField();
             }
         });
         
-        // Validate custom college on input
+        // Also listen for input event (for programmatic changes)
+        collegeSelect.addEventListener('input', function() {
+            if (this.value === 'Other') {
+                showCustomCollegeField();
+            } else {
+                hideCustomCollegeField();
+            }
+        });
+        
+        // Validate custom college on blur
         customCollegeInput.addEventListener('blur', function() {
             if (collegeSelect.value === 'Other') {
                 validateField(customCollegeInput, customCollegeError);
             }
         });
+        
+        console.log('✅ Custom college field setup complete');
     }
+    
+    // Setup custom college field
+    setupCustomCollegeField();
     
     // Backend API URL - Production URL
     // IMPORTANT: This URL is hardcoded for production deployment
@@ -493,6 +546,7 @@ function initRegistration() {
                         
                         if (verifyData.verified) {
                             // Step 4: Save to Firestore (frontend) - All form data
+                            // Get all form fields
                             const allFormData = {
                                 name: name,
                                 email: email,
@@ -501,28 +555,39 @@ function initRegistration() {
                                 order_id: response.razorpay_order_id,
                                 payment_status: 'paid',
                                 createdAt: new Date(),
-                                // All form fields
-                                studIdNo: document.getElementById('studIdNo').value.trim(),
-                                groupName: document.getElementById('groupName').value.trim(),
-                                college: collegeValue,
-                                customCollege: collegeSelect && collegeSelect.value === 'Other' ? (document.getElementById('customCollege')?.value.trim() || '') : '',
-                                aadhaarNo: document.getElementById('aadhaarNo').value.trim(),
-                                course: document.getElementById('course').value.trim(),
-                                branch: document.getElementById('branch').value.trim(),
-                                year: document.getElementById('year').value,
-                                contactNumber: document.getElementById('contactNumber').value.trim(),
-                                event1: event1,
-                                event2: event2
+                                // All form fields - explicitly get each one
+                                studIdNo: document.getElementById('studIdNo')?.value.trim() || '',
+                                groupName: document.getElementById('groupName')?.value.trim() || '',
+                                college: collegeValue || '',
+                                customCollege: (collegeSelect && collegeSelect.value === 'Other') ? (document.getElementById('customCollege')?.value.trim() || '') : '',
+                                aadhaarNo: document.getElementById('aadhaarNo')?.value.trim() || '',
+                                course: document.getElementById('course')?.value.trim() || '',
+                                branch: document.getElementById('branch')?.value.trim() || '',
+                                year: document.getElementById('year')?.value || '',
+                                contactNumber: document.getElementById('contactNumber')?.value.trim() || '',
+                                event1: event1 || '',
+                                event2: event2 || ''
                             };
                             
+                            console.log('📦 Complete form data to save:', allFormData);
+                            
+                            // Save to Firestore
                             await saveToFirestore(allFormData);
                             
                             // Store all data in sessionStorage for success page and ticket
+                            // Convert Date to string for JSON storage
+                            const dataForStorage = {
+                                ...allFormData,
+                                createdAt: allFormData.createdAt.toISOString()
+                            };
+                            
                             sessionStorage.setItem('payment_id', response.razorpay_payment_id);
                             sessionStorage.setItem('order_id', response.razorpay_order_id);
                             sessionStorage.setItem('user_name', name);
                             sessionStorage.setItem('user_email', email);
-                            sessionStorage.setItem('registration_data', JSON.stringify(allFormData));
+                            sessionStorage.setItem('registration_data', JSON.stringify(dataForStorage));
+                            
+                            console.log('✅ All data stored in sessionStorage');
                             
                             // Redirect to success page
                             window.location.href = `success.html?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
@@ -572,21 +637,46 @@ function initRegistration() {
         try {
             // Check if Firestore is available
             if (typeof window.firebaseDb === 'undefined') {
-                console.warn('Firestore not available, skipping frontend save');
+                console.warn('⚠️ Firestore not available, skipping frontend save');
+                console.warn('Backend will save the data instead');
                 return;
             }
             
+            console.log('💾 Saving to Firestore...');
+            console.log('Data:', data);
+            
             // Import Firestore functions
-            const { collection, addDoc } = await import('firebase/firestore');
+            const { collection, addDoc, serverTimestamp, Timestamp } = await import('firebase/firestore');
+            
+            // Convert Date to Firestore Timestamp
+            let createdAtValue;
+            if (data.createdAt instanceof Date) {
+                createdAtValue = Timestamp.fromDate(data.createdAt);
+            } else {
+                createdAtValue = serverTimestamp();
+            }
+            
+            const firestoreData = {
+                ...data,
+                createdAt: createdAtValue
+            };
+            
+            // Log all fields being saved
+            console.log('📦 Saving to Firestore - Fields:', Object.keys(firestoreData));
+            console.log('📦 Complete data:', firestoreData);
             
             // Add document to 'registrations' collection
-            const docRef = await addDoc(collection(window.firebaseDb, 'registrations'), data);
+            const docRef = await addDoc(collection(window.firebaseDb, 'registrations'), firestoreData);
             
-            console.log('✅ Registration saved to Firestore:', docRef.id);
+            console.log('✅ Registration saved to Firestore with ID:', docRef.id);
+            console.log('📊 Total fields saved:', Object.keys(firestoreData).length);
+            console.log('📋 Field list:', Object.keys(firestoreData).join(', '));
             return docRef.id;
         } catch (error) {
-            console.error('Error saving to Firestore:', error);
+            console.error('❌ Error saving to Firestore:', error);
+            console.error('Error details:', error.message, error.stack);
             // Don't throw - backend already saved it
+            // But log the error for debugging
         }
     }
     
