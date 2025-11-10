@@ -543,17 +543,30 @@ function initRegistration() {
     });
     
     // Backend API URL - Production URL
+    // IMPORTANT: This URL is hardcoded for production deployment
+    // DO NOT use placeholder URLs - always use the actual backend URL
     const API_BASE_URL = (() => {
         // Development: Use localhost
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             return 'http://localhost:5000';
         }
-        // Production: Use deployed backend URL
-        return 'https://enigmaugi.onrender.com';
+        // Production: Use deployed backend URL - HARDCODED
+        // Backend URL: https://enigmaugi.onrender.com
+        const PRODUCTION_BACKEND_URL = 'https://enigmaugi.onrender.com';
+        
+        // Safety check: Never allow placeholder URLs
+        if (PRODUCTION_BACKEND_URL.includes('your-backend') || PRODUCTION_BACKEND_URL.includes('placeholder')) {
+            console.error('❌ ERROR: Placeholder URL detected! This should never happen.');
+            throw new Error('Invalid backend URL configuration');
+        }
+        
+        return PRODUCTION_BACKEND_URL;
     })();
     
-    // Log API URL for debugging
+    // Log API URL for debugging - This will show in console
     console.log('🔗 Backend API URL:', API_BASE_URL);
+    console.log('📍 Current hostname:', window.location.hostname);
+    console.log('🌐 Full URL:', window.location.href);
     
     // Razorpay key (placeholder - replace with actual key from backend response)
     let razorpayKey = 'rzp_test_RdkBIbYhYwLVr7'; // Will be updated from create-order response

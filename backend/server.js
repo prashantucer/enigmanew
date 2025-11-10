@@ -27,7 +27,6 @@ const allowedOrigins = [
     'http://localhost:8000',           // Python/Node local server
     'http://127.0.0.1:5500',
     'http://127.0.0.1:8000',
-    'https://enigmaugi.onrender.com',
     // Production URLs - Add your deployed frontend URLs here:
     'https://enigmaugi.netlify.app',
     'https://enigmaugii.netlify.app',  // Alternative Netlify URL
@@ -37,19 +36,38 @@ const allowedOrigins = [
     ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
 ];
 
-import cors from "cors";
-
-// ✅ Universal CORS for Render + Netlify stability
-app.use(
-  cors({
-    origin: "*", // allow all domains
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-// ✅ Handle preflight requests
-app.options("*", cors());
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+        
+        // Check if origin is in allowed list
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            return callback(null, true);
+        }
+        
+        // In development, allow all origins
+        if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+            return callback(null, true);
+        }
+        
+        // In production, allow Netlify domains (more flexible)
+        if (origin && origin.includes('.netlify.app')) {
+            return callback(null, true);
+        }
+        
+        // Otherwise, reject in production
+        if (process.env.NODE_ENV === 'production') {
+            console.warn(`⚠️ CORS blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        } else {
+            callback(null, true);
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
