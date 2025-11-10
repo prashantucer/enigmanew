@@ -391,8 +391,10 @@ function initRegistration() {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             return 'http://localhost:5000';
         }
-        // Production: Use deployed backend URL - HARDCODED
+        // Production: Use deployed backend URL
         // Backend URL: https://enigmaugi.onrender.com
+        // Note: Both frontend URLs work (enigmaugi.netlify.app and enigmaugii.netlify.app)
+        // Backend CORS is configured to accept requests from both
         const PRODUCTION_BACKEND_URL = 'https://enigmaugi.onrender.com';
         
         // Safety check: Never allow placeholder URLs

@@ -51,7 +51,8 @@ app.use(cors({
             return callback(null, true);
         }
         
-        // In production, allow Netlify domains (more flexible)
+        // In production, allow all Netlify domains (supports both enigmaugi and enigmaugii)
+        // This allows switching between different Netlify deployments without issues
         if (origin && origin.includes('.netlify.app')) {
             return callback(null, true);
         }

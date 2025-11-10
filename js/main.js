@@ -102,8 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const newImg = new Image();
                         newImg.decoding = 'async';
                         newImg.onload = function() {
-                            img.src = img.dataset.src;
-                            img.removeAttribute('data-src');
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
                             img.classList.add('loaded');
                         };
                         newImg.onerror = function() {

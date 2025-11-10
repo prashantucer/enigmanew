@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (placeholder) {
                     placeholder.style.opacity = '0';
                     setTimeout(() => {
-                        placeholder.style.display = 'none';
+                    placeholder.style.display = 'none';
                     }, 200);
                 }
                 this.style.display = 'block';
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             galleryItem.classList.add('loaded');
                         };
                         newImg.onerror = function() {
-                            img.removeAttribute('data-src');
+                    img.removeAttribute('data-src');
                             img.style.display = 'none';
                             const placeholder = galleryItem.querySelector('.gallery-placeholder');
                             if (placeholder) {
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (placeholder) {
                         placeholder.style.opacity = '0';
                         setTimeout(() => {
-                            placeholder.style.display = 'none';
+                        placeholder.style.display = 'none';
                         }, 200);
                     }
                     video.style.display = 'block';
