@@ -19,7 +19,6 @@ Local code already correct है. Bas **Netlify पर redeploy** करना 
 
 ---
 
-## 🚀 Steps (Simple)
 
 ### Step 1: Netlify पर Redeploy करें
 
@@ -38,7 +37,6 @@ git add .
 git commit -m "Update backend URL"
 git push
 ```
-Netlify automatically deploy कर देगा.
 
 ---
 
