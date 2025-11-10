@@ -118,11 +118,14 @@
                             </div>
                             
                             <!-- Custom College Field (shown when "Other" is selected) -->
-                            <div class="form-row" id="customCollegeRow" style="display: none;">
+                            <div class="form-row" id="customCollegeRow" style="display: none; grid-template-columns: 1fr;">
                                 <div class="form-group">
-                                    <label for="customCollege">College Name <span class="required">*</span></label>
+                                    <label for="customCollege">Enter Your College Name <span class="required">*</span></label>
                                     <input type="text" id="customCollege" name="customCollege" placeholder="Enter your college name">
                                     <span class="error-message" id="customCollegeError"></span>
+                                    <small style="color: var(--color-text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                                        Please enter the full name of your college
+                                    </small>
                                 </div>
                             </div>
                         </div>

@@ -85,8 +85,51 @@
 .success-subtitle {
     font-size: 1.1rem;
     color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.8;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.success-subtitle strong {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Success Badge */
+.success-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.2));
+    border: 2px solid var(--color-primary);
+    border-radius: 50px;
+    padding: var(--spacing-sm) var(--spacing-lg);
     margin-bottom: var(--spacing-xl);
-    line-height: 1.6;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(0, 255, 255, 0);
+    }
+}
+
+.badge-icon {
+    font-size: 1.2rem;
+    color: var(--color-primary);
+    font-weight: bold;
+}
+
+.badge-text {
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 /* Details Card */

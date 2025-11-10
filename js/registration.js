@@ -289,15 +289,28 @@ function initRegistration() {
     const customCollegeError = document.getElementById('customCollegeError');
     
     if (collegeSelect && customCollegeRow && customCollegeInput) {
+        // Check initial state (in case page loads with "Other" selected)
+        if (collegeSelect.value === 'Other') {
+            customCollegeRow.style.display = 'grid';
+            customCollegeInput.setAttribute('required', 'required');
+        }
+        
         collegeSelect.addEventListener('change', function() {
             if (this.value === 'Other') {
-                customCollegeRow.style.display = 'block';
+                // Show custom college field
+                customCollegeRow.style.display = 'grid';
                 customCollegeInput.setAttribute('required', 'required');
+                // Auto focus after a small delay for smooth UX
+                setTimeout(() => {
+                    customCollegeInput.focus();
+                }, 100);
                 // Clear error when showing
                 if (customCollegeError) {
                     customCollegeError.classList.remove('show');
                 }
+                console.log('✅ Custom college field shown');
             } else {
+                // Hide custom college field
                 customCollegeRow.style.display = 'none';
                 customCollegeInput.removeAttribute('required');
                 customCollegeInput.value = '';
@@ -305,6 +318,7 @@ function initRegistration() {
                 if (customCollegeError) {
                     customCollegeError.classList.remove('show');
                 }
+                console.log('✅ Custom college field hidden');
             }
         });
         

@@ -127,71 +127,157 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadTicketBtn = document.getElementById('downloadTicketBtn');
     if (downloadTicketBtn) {
         downloadTicketBtn.addEventListener('click', function() {
+            // Show loading state
+            const originalText = downloadTicketBtn.innerHTML;
+            downloadTicketBtn.disabled = true;
+            downloadTicketBtn.innerHTML = '<span>⏳ Generating Ticket...</span>';
+            
             generateAndDownloadTicket(registrationData || {
                 name: userName,
                 email: userEmail,
                 payment_id: paymentId,
                 order_id: orderId,
                 amount: 300
+            }).finally(() => {
+                // Reset button
+                downloadTicketBtn.disabled = false;
+                downloadTicketBtn.innerHTML = originalText;
             });
         });
     }
 });
 
+// Convert image to base64
+function getImageAsBase64(url, callback) {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = this.width;
+        canvas.height = this.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(this, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        callback(dataURL);
+    };
+    img.onerror = function() {
+        console.warn('Logo image failed to load, using text only');
+        callback(null);
+    };
+    img.src = url;
+}
+
 // Generate and Download Ticket as PDF
 function generateAndDownloadTicket(data) {
+    return new Promise((resolve, reject) => {
+        try {
+            // Load jsPDF library dynamically
+            if (window.jspdf) {
+                createTicketPDF(data, resolve, reject);
+            } else {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                script.onload = function() {
+                    createTicketPDF(data, resolve, reject);
+                };
+                script.onerror = function() {
+                    reject(new Error('Failed to load PDF library'));
+                };
+                document.head.appendChild(script);
+            }
+        } catch (error) {
+            console.error('Error generating ticket:', error);
+            alert('Error generating ticket. Please try again or contact support.');
+            reject(error);
+        }
+    });
+}
+
+function createTicketPDF(data, resolve, reject) {
     try {
-        // Load jsPDF library dynamically
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        script.onload = function() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Ticket dimensions
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 20;
+        let yPos = margin;
+        
+        // Colors - ENIGMA theme
+        const primaryColor = [0, 255, 255]; // Cyan
+        const secondaryColor = [255, 0, 255]; // Magenta
+        const textColor = [255, 255, 255]; // White
+        const bgColor = [15, 15, 25]; // Dark blue
+        const accentColor = [0, 200, 255]; // Light cyan
+        
+        // ============================================
+        // HEADER SECTION WITH LOGO
+        // ============================================
+        const headerHeight = 65;
+        
+        // Header background with gradient effect
+        doc.setFillColor(...bgColor);
+        doc.rect(0, 0, pageWidth, headerHeight, 'F');
+        
+        // Decorative border
+        doc.setDrawColor(...primaryColor);
+        doc.setLineWidth(2);
+        doc.rect(0, 0, pageWidth, headerHeight);
+        
+        // Try to add logo
+        const logoPath = 'assets/logo/ENIGMA!_20251018_152032_0000.png';
+        getImageAsBase64(logoPath, function(logoBase64) {
+            if (logoBase64) {
+                try {
+                    // Add logo (40x40 size)
+                    doc.addImage(logoBase64, 'PNG', pageWidth / 2 - 20, 10, 40, 40);
+                    yPos = 60;
+                } catch (e) {
+                    console.warn('Could not add logo image:', e);
+                    yPos = 25;
+                }
+            } else {
+                yPos = 25;
+            }
             
-            // Ticket dimensions
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
-            const margin = 20;
-            let yPos = margin;
-            
-            // Colors
-            const primaryColor = [0, 255, 255]; // Cyan
-            const textColor = [255, 255, 255]; // White
-            const bgColor = [20, 20, 30]; // Dark blue
-            
-            // Header with background
-            doc.setFillColor(...bgColor);
-            doc.rect(0, 0, pageWidth, 50, 'F');
-            
-            // Logo/Title
+            // Title
             doc.setTextColor(...textColor);
-            doc.setFontSize(24);
+            doc.setFontSize(28);
             doc.setFont('helvetica', 'bold');
-            doc.text('ENIGMA XIII', pageWidth / 2, 20, { align: 'center' });
+            doc.text('ENIGMA XIII', pageWidth / 2, yPos, { align: 'center' });
             
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Registration Ticket', pageWidth / 2, 35, { align: 'center' });
+            yPos += 8;
             
-            yPos = 60;
-            
-            // Ticket content
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Registration Confirmation', margin, yPos);
-            
-            yPos += 15;
-            
-            // Draw line
-            doc.setDrawColor(...primaryColor);
-            doc.setLineWidth(0.5);
-            doc.line(margin, yPos, pageWidth - margin, yPos);
-            yPos += 10;
-            
-            // Registration details
+            // Subtitle
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
+            doc.text('Registration Confirmation Ticket', pageWidth / 2, yPos, { align: 'center' });
+            
+            yPos += 5;
+            doc.setFontSize(9);
+            doc.setTextColor(200, 200, 200);
+            doc.text('The official cultural festival of United Group of Institutions', pageWidth / 2, yPos, { align: 'center' });
+            
+            yPos = headerHeight + 15;
+            
+            // ============================================
+            // TICKET CONTENT
+            // ============================================
+            
+            // Main title
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Registration Details', margin, yPos);
+            
+            yPos += 12;
+            
+            // Decorative line
+            doc.setDrawColor(...primaryColor);
+            doc.setLineWidth(1.5);
+            doc.line(margin, yPos, pageWidth - margin, yPos);
+            yPos += 10;
             
             // Get college display name
             let collegeDisplay = 'N/A';
@@ -201,66 +287,146 @@ function generateAndDownloadTicket(data) {
                 collegeDisplay = collegeNames[data.college] || data.college || 'N/A';
             }
             
+            // Registration details with better formatting
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            
             const details = [
-                ['Name:', data.name || 'N/A'],
-                ['Email:', data.email || 'N/A'],
-                ['College:', collegeDisplay],
-                ['Student ID:', data.studIdNo || 'N/A'],
-                ['Course:', data.course || 'N/A'],
-                ['Branch:', data.branch || 'N/A'],
-                ['Year:', data.year || 'N/A'],
-                ['Contact:', data.contactNumber || 'N/A'],
-                ['Event 1:', eventData[data.event1] || data.event1 || 'N/A'],
-                ['Event 2:', eventData[data.event2] || data.event2 || 'N/A'],
-                ['Payment ID:', data.payment_id || 'N/A'],
-                ['Order ID:', data.order_id || 'N/A'],
-                ['Amount Paid:', `₹${data.amount || 300}`]
+                { label: 'Name', value: data.name || 'N/A', important: true },
+                { label: 'Email', value: data.email || 'N/A' },
+                { label: 'Student ID', value: data.studIdNo || 'N/A' },
+                { label: 'College', value: collegeDisplay, important: true },
+                { label: 'Course', value: data.course || 'N/A' },
+                { label: 'Branch', value: data.branch || 'N/A' },
+                { label: 'Year', value: data.year || 'N/A' },
+                { label: 'Contact', value: data.contactNumber || 'N/A' },
+                { label: 'Event 1', value: eventData[data.event1] || data.event1 || 'N/A', important: true },
+                { label: 'Event 2', value: eventData[data.event2] || data.event2 || 'N/A', important: true },
             ];
             
-            details.forEach(([label, value]) => {
-                if (yPos > pageHeight - 30) {
+            // Payment details section
+            yPos += 5;
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...primaryColor);
+            doc.text('Payment Information', margin, yPos);
+            yPos += 8;
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            
+            const paymentDetails = [
+                { label: 'Payment ID', value: data.payment_id || 'N/A' },
+                { label: 'Order ID', value: data.order_id || 'N/A' },
+                { label: 'Amount Paid', value: `₹${data.amount || 300}`, important: true }
+            ];
+            
+            // Draw details with better styling
+            [...details, ...paymentDetails].forEach((item, index) => {
+                if (yPos > pageHeight - 40) {
                     doc.addPage();
-                    yPos = margin;
+                    yPos = margin + 10;
+                }
+                
+                // Highlight important fields
+                if (item.important) {
+                    doc.setFillColor(240, 255, 255);
+                    doc.rect(margin - 2, yPos - 6, pageWidth - (margin * 2) + 4, 8, 'F');
                 }
                 
                 doc.setFont('helvetica', 'bold');
-                doc.text(label, margin, yPos);
+                doc.setTextColor(60, 60, 60);
+                doc.text(item.label + ':', margin, yPos);
+                
                 doc.setFont('helvetica', 'normal');
-                doc.text(value, margin + 50, yPos);
-                yPos += 8;
+                doc.setTextColor(0, 0, 0);
+                const valueX = margin + 45;
+                const maxWidth = pageWidth - valueX - margin;
+                
+                // Handle long text
+                const lines = doc.splitTextToSize(item.value, maxWidth);
+                doc.text(lines, valueX, yPos);
+                
+                yPos += lines.length * 5 + 3;
             });
             
             yPos += 10;
             
+            // ============================================
+            // FOOTER SECTION
+            // ============================================
+            
             // Footer line
             doc.setDrawColor(...primaryColor);
+            doc.setLineWidth(1);
             doc.line(margin, yPos, pageWidth - margin, yPos);
-            yPos += 10;
+            yPos += 8;
             
-            // Important note
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'italic');
-            doc.setTextColor(100, 100, 100);
-            doc.text('Please bring this ticket (or a copy) to the event venue.', margin, yPos);
+            // Important instructions box
+            doc.setFillColor(255, 255, 240);
+            doc.setDrawColor(255, 200, 0);
+            doc.setLineWidth(0.5);
+            const boxHeight = 35;
+            doc.roundedRect(margin, yPos, pageWidth - (margin * 2), boxHeight, 3, 3, 'FD');
+            
             yPos += 6;
-            doc.text('For queries, contact: enigma@united.edu.in', margin, yPos);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(200, 100, 0);
+            doc.text('📋 Important Instructions:', margin + 3, yPos);
             
-            // Date
-            yPos += 10;
-            const date = new Date();
+            yPos += 6;
             doc.setFont('helvetica', 'normal');
-            doc.text(`Generated on: ${date.toLocaleString('en-IN')}`, margin, yPos);
+            doc.setTextColor(80, 80, 80);
+            doc.setFontSize(8);
+            const instructions = [
+                '• Please bring this ticket (or a digital copy) to the event venue',
+                '• Keep your Payment ID safe for any queries',
+                '• Event dates: November 21-22, 2025',
+                '• For queries: enigma@united.edu.in'
+            ];
+            
+            instructions.forEach(instruction => {
+                if (yPos > pageHeight - 15) {
+                    doc.addPage();
+                    yPos = margin + 10;
+                }
+                doc.text(instruction, margin + 5, yPos);
+                yPos += 5;
+            });
+            
+            yPos += 8;
+            
+            // Date and QR code area
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(120, 120, 120);
+            const date = new Date();
+            doc.text(`Ticket Generated: ${date.toLocaleString('en-IN', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })}`, margin, yPos);
+            
+            // Footer text
+            yPos = pageHeight - 15;
+            doc.setFontSize(7);
+            doc.setTextColor(150, 150, 150);
+            doc.text('This is an official ENIGMA XIII registration ticket. Unauthorized reproduction is prohibited.', 
+                pageWidth / 2, yPos, { align: 'center' });
             
             // Save PDF
-            const fileName = `ENIGMA_XIII_Ticket_${data.payment_id || 'ticket'}.pdf`;
+            const fileName = `ENIGMA_XIII_Ticket_${data.payment_id || Date.now()}.pdf`;
             doc.save(fileName);
             
             console.log('✅ Ticket downloaded successfully');
-        };
-        
-        document.head.appendChild(script);
-    } catch (error) {
-        console.error('Error generating ticket:', error);
-        alert('Error generating ticket. Please try again or contact support.');
-    }
+            resolve();
+        } catch (error) {
+            console.error('Error creating PDF:', error);
+            reject(error);
+        }
+    });
 }
