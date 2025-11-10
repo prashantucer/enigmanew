@@ -70,10 +70,30 @@ app.use(cors({
 }));
 
 // Initialize Razorpay
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+let razorpay;
+
+try {
+    // Validate Razorpay credentials
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        console.error('❌ ERROR: Razorpay credentials missing!');
+        console.error('Required environment variables:');
+        console.error('  - RAZORPAY_KEY_ID');
+        console.error('  - RAZORPAY_KEY_SECRET');
+        throw new Error('Razorpay credentials not configured');
+    }
+
+    razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET
+    });
+    
+    console.log('✅ Razorpay initialized successfully');
+    console.log(`🔑 Razorpay Key ID: ${process.env.RAZORPAY_KEY_ID.substring(0, 10)}...`);
+} catch (error) {
+    console.error('❌ Failed to initialize Razorpay:', error.message);
+    // Server will still start, but payment endpoints will fail
+    razorpay = null;
+}
 
 // ============================================
 // Routes
@@ -91,6 +111,16 @@ app.get('/', (req, res) => {
 // Create Razorpay Order
 app.post('/create-order', async (req, res) => {
     try {
+        // Check if Razorpay is initialized
+        if (!razorpay) {
+            console.error('❌ Razorpay not initialized - credentials missing');
+            return res.status(500).json({
+                status: 'error',
+                message: 'Payment service not configured',
+                error: 'Razorpay credentials are missing. Please check environment variables: RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET'
+            });
+        }
+
         const { amount, currency = 'INR', receipt } = req.body;
 
         // Validate required fields
@@ -119,8 +149,16 @@ app.post('/create-order', async (req, res) => {
             payment_capture: 1 // Auto capture payment
         };
 
+        console.log('🔄 Creating Razorpay order:', {
+            amount: amountInPaise,
+            currency: currency,
+            receipt: options.receipt
+        });
+
         // Create order with Razorpay
         const order = await razorpay.orders.create(options);
+
+        console.log('✅ Razorpay order created:', order.id);
 
         // Return order details
         res.json({
@@ -132,11 +170,28 @@ app.post('/create-order', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error creating order:', error);
+        console.error('❌ Error creating Razorpay order:', error);
+        console.error('Error details:', {
+            message: error.message,
+            statusCode: error.statusCode,
+            error: error.error
+        });
+        
+        // More detailed error response
+        let errorMessage = 'Failed to create order';
+        if (error.statusCode === 401) {
+            errorMessage = 'Invalid Razorpay credentials';
+        } else if (error.statusCode === 400) {
+            errorMessage = error.error?.description || 'Invalid request to Razorpay';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
         res.status(500).json({
             status: 'error',
-            message: 'Failed to create order',
-            error: error.message
+            message: errorMessage,
+            error: error.message || 'Unknown error',
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
@@ -297,7 +352,12 @@ app.use((req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 ENIGMA XIII Registration API running on port ${PORT}`);
     console.log(`📍 Server: http://localhost:${PORT}`);
-    console.log(`🔑 Razorpay Key ID: ${process.env.RAZORPAY_KEY_ID ? 'Configured' : 'Missing'}`);
-    console.log(`🔥 Firestore: ${db ? 'Connected' : 'Not configured'}`);
+    console.log(`🔑 Razorpay: ${razorpay ? '✅ Initialized' : '❌ Not configured'}`);
+    if (razorpay) {
+        console.log(`   Key ID: ${process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.substring(0, 15) + '...' : 'Missing'}`);
+    } else {
+        console.log(`   ⚠️  Missing: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET`);
+    }
+    console.log(`🔥 Firestore: ${db ? '✅ Connected' : '⚠️  Not configured (optional)'}`);
 });
 
