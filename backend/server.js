@@ -27,6 +27,7 @@ const allowedOrigins = [
     'http://localhost:8000',           // Python/Node local server
     'http://127.0.0.1:5500',
     'http://127.0.0.1:8000',
+    'https://enigmaugi.onrender.com',
     // Production URLs - Add your deployed frontend URLs here:
     'https://enigmaugi.netlify.app',
     'https://enigmaugii.netlify.app',  // Alternative Netlify URL
