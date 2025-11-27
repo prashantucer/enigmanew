@@ -110,7 +110,7 @@ Copyright by ENIGMA XIII. All rights reserved.
 - United Group of Institutions for hosting ENIGMA XIII
 - All sponsors and participants
 
----
+-------
 
-**Made with ❤️ for ENIGMA XIII**
+**Made with ❤️ for ENIGMA XIII**   
 
